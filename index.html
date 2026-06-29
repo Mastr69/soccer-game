@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KnuckleBall - 2v2 Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase Compat Libraries (Standard Script Tags to prevent CORS issues on file:// protocol) -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <style>
         @keyframes pulse-fast {
             0%, 100% { opacity: 1; }
@@ -16,6 +12,11 @@
         }
         .animate-pulse-fast { animation: pulse-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .hidden { display: none !important; }
+        /* Smooth custom scrollbars for tables */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #eab308; }
     </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-white font-sans select-none overflow-x-hidden overflow-y-auto relative flex flex-col justify-between">
@@ -25,22 +26,13 @@
     <div class="absolute inset-0 bg-gradient-to-tr from-[#020617] via-[#052e16]/20 to-[#1e1b4b]/40 z-0 pointer-events-none"></div>
 
     <!-- HEADER -->
-    <header class="z-20 relative flex justify-between items-center px-6 py-4 bg-slate-900/95 border-b border-cyan-500/30 backdrop-blur-md">
+    <header class="z-20 relative flex justify-between items-center px-6 py-4 bg-slate-900/95 border-b border-yellow-500/30 backdrop-blur-md">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-lg flex items-center justify-center font-black text-xl text-black italic shadow-lg shadow-yellow-500/20">KB</div>
             <div>
-                <h1 class="text-lg font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-white to-yellow-500">KNUCKLEBALL</h1>
-                <p class="text-xs text-slate-400 font-semibold tracking-wider">PREMIER LEAGUE VS LA LIGA 2V2</p>
+                <h1 id="header-title" class="text-lg font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-white to-yellow-500">KNUCKLEBALL</h1>
+                <p id="header-subtitle" class="text-xs text-slate-400 font-semibold tracking-wider">2V2 ARENA</p>
             </div>
-        </div>
-        <div class="flex items-center gap-4">
-            <div id="online-indicator" class="hidden items-center gap-2 bg-slate-950 px-3 py-1.5 rounded border border-cyan-500/20 text-xs text-cyan-400">
-                <span class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
-                <span>Lobby Active: <strong id="header-lobby-code"></strong></span>
-            </div>
-            <button id="btn-exit" class="px-4 py-2 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white text-xs font-bold uppercase rounded-md shadow-md hover:scale-105 transition active:scale-95 hidden">
-                Exit Game
-            </button>
         </div>
     </header>
 
@@ -50,31 +42,25 @@
         <!-- MENU SCREEN -->
         <main id="screen-menu" class="flex-1 flex flex-col items-center justify-center px-4 max-w-4xl mx-auto w-full my-8">
             <div class="text-center mb-10">
-                <div class="inline-block px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/40 rounded-full text-cyan-400 text-xs uppercase font-extrabold tracking-widest mb-4">Ultimate 2v2 Simulation</div>
+                <div class="inline-block px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/40 rounded-full text-yellow-400 text-xs uppercase font-extrabold tracking-widest mb-4">Ultimate 2v2 Simulation</div>
                 <h2 class="text-5xl md:text-7xl font-extrabold tracking-tighter text-white uppercase drop-shadow">
                     KNUCKLE<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-500">BALL</span>
                 </h2>
                 <p class="text-slate-400 mt-2 text-sm md:text-base max-w-md mx-auto">Fast-paced top-down football simulator with real-time responsive ball mechanics, curves, and tactical AI challenge.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl mb-12">
-                <div onclick="setMode('single')" class="group cursor-pointer bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-yellow-400/80 rounded-2xl p-6 text-center shadow-2xl transition duration-300 relative overflow-hidden">
+            <div class="flex flex-col md:flex-row gap-6 w-full max-w-2xl mb-12 mx-auto">
+                <div onclick="setMode('single')" class="flex-1 group cursor-pointer bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-yellow-400/80 rounded-2xl p-6 text-center shadow-2xl transition duration-300 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-2 h-full bg-yellow-400 group-hover:bg-yellow-300"></div>
                     <div class="text-4xl mb-4 group-hover:scale-110 transition inline-block">🤖</div>
                     <h3 class="font-extrabold text-lg text-white group-hover:text-yellow-400 transition">SINGLE PLAYER</h3>
-                    <p class="text-slate-400 text-xs mt-2">Test your professional dribbles against our dynamic difficulty CPU Engine.</p>
+                    <p class="text-slate-400 text-xs mt-2">Play CPU exhibition matches or compete in the 48-Team World Cup 2026 Campaign.</p>
                 </div>
-                <div onclick="setMode('local')" class="group cursor-pointer bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-400/80 rounded-2xl p-6 text-center shadow-2xl transition duration-300 relative overflow-hidden">
+                <div onclick="setMode('local')" class="flex-1 group cursor-pointer bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-400/80 rounded-2xl p-6 text-center shadow-2xl transition duration-300 relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-2 h-full bg-cyan-400 group-hover:bg-cyan-300"></div>
                     <div class="text-4xl mb-4 group-hover:scale-110 transition inline-block">👥</div>
                     <h3 class="font-extrabold text-lg text-white group-hover:text-cyan-400 transition">LOCAL 2 PLAYER</h3>
                     <p class="text-slate-400 text-xs mt-2">Share a single screen keyboard and play head-to-head. Classic local derby.</p>
-                </div>
-                <div onclick="setMode('online')" class="group cursor-pointer bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-400/80 rounded-2xl p-6 text-center shadow-2xl transition duration-300 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-emerald-400 group-hover:bg-emerald-300"></div>
-                    <div class="text-4xl mb-4 group-hover:scale-110 transition inline-block">🌐</div>
-                    <h3 class="font-extrabold text-lg text-white group-hover:text-emerald-400 transition">ONLINE MULTIPLAYER</h3>
-                    <p class="text-slate-400 text-xs mt-2">Seamless peer-to-peer cloud matchmaking. Play friends on completely different devices.</p>
                 </div>
             </div>
             <button onclick="showScreen('how-to-play')" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase rounded-lg border border-slate-700 transition">View Game Guide</button>
@@ -86,6 +72,10 @@
                 <h2 class="text-3xl font-black text-center text-yellow-400 mb-6 uppercase">CONTROLS & PHYSICS GUIDE</h2>
                 <div class="space-y-6 text-sm text-slate-300">
                     <div class="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                        <span class="font-bold text-white block mb-2 text-yellow-400">🥅 ACTIVE GOALKEEPERS</span>
+                        <p>Matches are 2v2! Each team has a dedicated automatic Goalkeeper guarding the net. Aim carefully and use dashes to curve shots past them.</p>
+                    </div>
+                    <div class="p-4 bg-slate-950 rounded-lg border border-slate-800">
                         <span class="font-bold text-white block mb-2 text-cyan-400">🏃‍♂️ PLAYER 1 CONTROLS (WASD)</span>
                         <p>• Use <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">W</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">A</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">S</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">D</span> to move.</p>
                         <p class="mt-1">• Tap <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">SPACE</span> to trigger a sudden **Dash Burst**.</p>
@@ -95,10 +85,6 @@
                         <p>• Use <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">▲</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">▼</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">◀</span> <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">▶</span> to maneuver.</p>
                         <p class="mt-1">• Tap <span class="text-white font-mono bg-slate-800 px-1 py-0.5 rounded">SHIFT</span> key to activate speed dash.</p>
                     </div>
-                    <div class="p-4 bg-slate-950 rounded-lg border border-slate-800">
-                        <span class="font-bold text-white block mb-2 text-emerald-400">💡 ANTI-STALL PENALTY</span>
-                        <p>• Hovering in the corners with the ball to waste time for more than 5 seconds will result in a foul! The ball will be automatically kicked back to the center circle.</p>
-                    </div>
                 </div>
                 <button onclick="showScreen('menu')" class="w-full mt-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-black uppercase rounded-lg shadow-lg text-sm transition">Back to Main Menu</button>
             </div>
@@ -107,121 +93,165 @@
         <!-- SETUP SCREEN -->
         <main id="screen-setup" class="hidden flex-1 flex-col items-center justify-center px-4 max-w-5xl mx-auto w-full my-6">
             <div class="text-center mb-6">
-                <h2 class="text-3xl font-extrabold text-white uppercase tracking-wider">PRE-MATCH SELECTION</h2>
-                <p class="text-xs text-slate-400 uppercase tracking-widest mt-1">Configure your ultimate stadium lineup</p>
+                <h2 class="text-3xl font-extrabold text-white uppercase tracking-wider">PRE-MATCH SETUP</h2>
+                <p class="text-xs text-slate-400 uppercase tracking-widest mt-1">Configure your ultimate lineup</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8">
-                <!-- Team 1 -->
-                <div class="bg-slate-900/90 border-2 border-slate-800/80 rounded-2xl p-6 flex flex-col">
-                    <span class="text-xs text-cyan-400 font-extrabold uppercase tracking-widest mb-2">HOME SIDE (PLAYER 1)</span>
-                    <select id="select-team1" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-500 mb-4"></select>
-                    
-                    <div class="flex-1 flex flex-col items-center justify-center py-6 bg-slate-950 rounded-xl border border-slate-800 relative overflow-hidden">
-                        <div id="t1-bg-abbrev" class="absolute top-2 right-2 text-6xl font-black text-slate-900 select-none"></div>
-                        <div id="t1-jersey" class="w-24 h-24 rounded-full flex items-center justify-center relative shadow-2xl transition duration-500">
-                            <span id="t1-jersey-text" class="text-2xl font-black text-white"></span>
-                            <div class="absolute bottom-[-10px] w-14 h-4 rounded-full bg-slate-800/60 blur-md"></div>
-                        </div>
-                        <div class="mt-4 text-center z-10">
-                            <h4 id="t1-name-display" class="font-extrabold text-lg"></h4>
-                            <p class="text-xs text-slate-400">Official Stadium Jersey Colors Applied</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Team 2 -->
-                <div class="bg-slate-900/90 border-2 border-slate-800/80 rounded-2xl p-6 flex flex-col">
-                    <span class="text-xs text-yellow-400 font-extrabold uppercase tracking-widest mb-2">AWAY SIDE (PLAYER 2 / CPU)</span>
-                    <select id="select-team2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-yellow-500 mb-4"></select>
-                    
-                    <div class="flex-1 flex flex-col items-center justify-center py-6 bg-slate-950 rounded-xl border border-slate-800 relative overflow-hidden">
-                        <div id="t2-bg-abbrev" class="absolute top-2 right-2 text-6xl font-black text-slate-900 select-none"></div>
-                        <div id="t2-jersey" class="w-24 h-24 rounded-full flex items-center justify-center relative shadow-2xl transition duration-500">
-                            <span id="t2-jersey-text" class="text-2xl font-black text-white"></span>
-                            <div class="absolute bottom-[-10px] w-14 h-4 rounded-full bg-slate-800/60 blur-md"></div>
-                        </div>
-                        <div class="mt-4 text-center z-10">
-                            <h4 id="t2-name-display" class="font-extrabold text-lg"></h4>
-                            <p class="text-xs text-slate-400">Official Stadium Jersey Colors Applied</p>
-                        </div>
-                    </div>
-                </div>
+            <!-- Single Player Mode Selector -->
+            <div id="single-player-mode-selector" class="w-full max-w-md mx-auto flex gap-4 mb-6 hidden">
+                <button id="btn-mode-exhibition" onclick="selectSubmode('exhibition')" class="flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-yellow-400 text-slate-950 border border-yellow-400">Exhibition Mode</button>
+                <button id="btn-mode-worldcup" onclick="selectSubmode('worldcup')" class="flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:text-white">🏆 World Cup 2026</button>
             </div>
 
-            <div class="w-full bg-slate-900/90 border border-slate-800/80 p-5 rounded-xl mb-6 flex flex-wrap gap-6 items-center justify-between">
-                <div class="flex flex-col gap-1">
-                    <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Match Length</span>
-                    <div class="flex gap-2" id="duration-btns">
-                        <button onclick="setDuration(45)" id="dur-45" class="px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400">45m (45s)</button>
-                        <button onclick="setDuration(90)" id="dur-90" class="px-3 py-1.5 rounded text-xs font-bold transition bg-cyan-500 text-black">90m (Classic)</button>
-                        <button onclick="setDuration(180)" id="dur-180" class="px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400">180m (180s)</button>
-                    </div>
-                </div>
+            <!-- WORLD CUP CONFIG PANEL -->
+            <div id="worldcup-config-panel" class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-xl p-6 mb-8 hidden mx-auto text-center">
+                <span class="text-xs text-yellow-400 font-extrabold uppercase tracking-widest block mb-2">WORLD CUP 2026 CAMPAIGN</span>
+                <p class="text-xs text-slate-400 mb-6">Choose your nation. 48 Teams, 12 Groups. Can you lift the trophy?</p>
+                
+                <label class="block text-xs text-slate-300 mb-2 uppercase font-bold">Select Your Country</label>
+                <select id="select-wc-user-team" class="w-full max-w-md mx-auto bg-slate-950 border border-slate-800 rounded p-3 text-sm text-white focus:outline-none mb-6"></select>
+                
+                <button onclick="startWorldCupCampaign()" class="w-full max-w-md mx-auto py-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black uppercase tracking-widest text-sm rounded-lg shadow-lg block hover:scale-105 transition">START TOURNAMENT</button>
+            </div>
 
-                <div id="ai-diff-container" class="flex flex-col gap-1 hidden">
-                    <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">CPU Difficulty</span>
-                    <div class="flex gap-2" id="diff-btns">
-                        <button onclick="setDiff('easy')" id="diff-easy" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400">EASY</button>
-                        <button onclick="setDiff('medium')" id="diff-medium" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-yellow-400 text-black">MEDIUM</button>
-                        <button onclick="setDiff('hard')" id="diff-hard" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400">HARD</button>
-                    </div>
-                </div>
-
-                <div id="online-controls" class="flex flex-col gap-1 w-full md:w-auto hidden">
-                    <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Multiplayer Matchmaker</span>
-                    <div class="flex gap-2 mt-1">
-                        <button onclick="hostLobby()" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-500 hover:to-green-600 text-white font-extrabold text-xs uppercase rounded transition">Host Match</button>
-                        <div class="flex border border-slate-800 rounded overflow-hidden">
-                            <input type="text" id="join-input" placeholder="Enter Match Code" class="bg-slate-950 px-3 py-2 text-xs text-white w-32 focus:outline-none"/>
-                            <button onclick="joinLobby()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-extrabold text-xs uppercase transition">Join</button>
+            <!-- STANDARD EXHIBITION PANEL -->
+            <div id="setup-standard-panel">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8">
+                    <!-- Team 1 -->
+                    <div class="bg-slate-900/90 border-2 border-slate-800/80 rounded-2xl p-6 flex flex-col">
+                        <span class="text-xs text-cyan-400 font-extrabold uppercase tracking-widest mb-2">HOME SIDE (PLAYER 1)</span>
+                        <select id="select-team1" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-500 mb-4"></select>
+                        
+                        <div class="flex-1 flex flex-col items-center justify-center py-6 bg-slate-950 rounded-xl border border-slate-800 relative overflow-hidden">
+                            <div id="t1-bg-abbrev" class="absolute top-2 right-2 text-6xl font-black text-slate-900 select-none"></div>
+                            <div id="t1-jersey" class="w-24 h-24 rounded-full flex items-center justify-center relative shadow-2xl transition duration-500">
+                                <span id="t1-jersey-text" class="text-2xl font-black text-white"></span>
+                                <div class="absolute bottom-[-10px] w-14 h-4 rounded-full bg-slate-800/60 blur-md"></div>
+                            </div>
+                            <div class="mt-4 text-center z-10">
+                                <h4 id="t1-name-display" class="font-extrabold text-lg"></h4>
+                                <p class="text-xs text-slate-400">Official Stadium Colors</p>
+                            </div>
                         </div>
-                        <button onclick="toggleConfigPanel()" class="p-2 bg-slate-950 hover:bg-slate-800 rounded border border-slate-800 text-slate-400 hover:text-white transition" title="Database Configuration Settings">⚙️</button>
                     </div>
-                    <p id="online-msg" class="text-[11px] text-amber-400 mt-1 font-semibold hidden"></p>
+
+                    <!-- Team 2 -->
+                    <div class="bg-slate-900/90 border-2 border-slate-800/80 rounded-2xl p-6 flex flex-col">
+                        <span class="text-xs text-yellow-400 font-extrabold uppercase tracking-widest mb-2">AWAY SIDE (PLAYER 2 / CPU)</span>
+                        <select id="select-team2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-yellow-500 mb-4"></select>
+                        
+                        <div class="flex-1 flex flex-col items-center justify-center py-6 bg-slate-950 rounded-xl border border-slate-800 relative overflow-hidden">
+                            <div id="t2-bg-abbrev" class="absolute top-2 right-2 text-6xl font-black text-slate-900 select-none"></div>
+                            <div id="t2-jersey" class="w-24 h-24 rounded-full flex items-center justify-center relative shadow-2xl transition duration-500">
+                                <span id="t2-jersey-text" class="text-2xl font-black text-white"></span>
+                                <div class="absolute bottom-[-10px] w-14 h-4 rounded-full bg-slate-800/60 blur-md"></div>
+                            </div>
+                            <div class="mt-4 text-center z-10">
+                                <h4 id="t2-name-display" class="font-extrabold text-lg"></h4>
+                                <p class="text-xs text-slate-400">Official Stadium Colors</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="w-full bg-slate-900/90 border border-slate-800/80 p-5 rounded-xl mb-6 flex flex-wrap gap-6 items-center justify-between">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">Match Length</span>
+                        <div class="flex gap-2" id="duration-btns">
+                            <button onclick="setDuration(45)" id="dur-45" class="px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400">45m (45s)</button>
+                            <button onclick="setDuration(90)" id="dur-90" class="px-3 py-1.5 rounded text-xs font-bold transition bg-cyan-500 text-black">90m (Classic)</button>
+                            <button onclick="setDuration(180)" id="dur-180" class="px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400">180m (180s)</button>
+                        </div>
+                    </div>
+
+                    <div id="ai-diff-container" class="flex flex-col gap-1 hidden">
+                        <span class="text-xs text-slate-400 uppercase tracking-widest font-bold">CPU Difficulty</span>
+                        <div class="flex gap-2" id="diff-btns">
+                            <button onclick="setDiff('easy')" id="diff-easy" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400">EASY</button>
+                            <button onclick="setDiff('medium')" id="diff-medium" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-yellow-400 text-black">MEDIUM</button>
+                            <button onclick="setDiff('hard')" id="diff-hard" class="px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400">HARD</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-launch" onclick="launchMatch()" class="w-full max-w-lg py-4 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-xl shadow-lg hover:scale-105 transition active:scale-95 text-base mx-auto block">
+                    LAUNCH KICK-OFF MATCH
+                </button>
             </div>
 
-            <!-- Custom Database Config Collapsible Settings Panel -->
-            <div id="custom-config-panel" class="w-full bg-slate-900 border border-slate-800 p-5 rounded-xl mb-6 hidden">
-                <span class="text-xs font-bold text-cyan-400 block mb-1">CONNECT YOUR DATABASE (OPTIONAL)</span>
-                <p class="text-[10px] text-slate-400 mb-3">To play multiplayer outside the Gemini sandbox, paste your free Firebase Web App Configuration JSON here. This connects you to your own live database!</p>
-                <textarea id="config-json-input" rows="3" placeholder='{ "apiKey": "...", "projectId": "...", ... }' class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-xs font-mono text-slate-300 focus:outline-none mb-2"></textarea>
-                <button onclick="saveCustomConfig()" class="w-full py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-black text-xs rounded uppercase transition">Save & Connect</button>
-            </div>
-
-            <button id="btn-launch" onclick="launchMatch()" class="w-full max-w-lg py-4 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 text-slate-950 font-black tracking-widest uppercase rounded-xl shadow-lg hover:scale-102 transition active:scale-98 text-base">
-                LAUNCH KICK-OFF MATCH
+            <!-- BACK BUTTON -->
+            <button onclick="showScreen('menu')" class="w-full max-w-lg mx-auto mt-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold uppercase rounded-lg border border-slate-700 transition block">
+                Back to Home Screen
             </button>
         </main>
 
-        <!-- LOBBY SCREEN -->
-        <main id="screen-lobby" class="hidden flex-1 flex-col items-center justify-center px-4 max-w-xl mx-auto w-full my-8">
-            <div class="bg-slate-900/95 border border-cyan-500/20 rounded-2xl p-8 shadow-2xl w-full text-center relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-500 to-emerald-500"></div>
-                <div class="text-4xl mb-4">🏆</div>
-                <h2 class="text-2xl font-black text-white uppercase tracking-wider mb-2">WAITING FOR CHALLENGER</h2>
-                <p class="text-slate-400 text-xs mb-6">Send your friend this custom Match Join Code to play multiplayer across devices!</p>
-                <div class="bg-slate-950 p-6 rounded-xl border border-slate-800/80 mb-6">
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest block mb-1">YOUR ROOM CODE</span>
-                    <span id="display-lobby-code" class="text-4xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 tracking-widest"></span>
+        <!-- WORLD CUP CAMPAIGN HUB SCREEN -->
+        <main id="screen-wc-hub" class="hidden flex-1 flex-col items-center px-4 py-4 w-full max-w-6xl mx-auto select-none">
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase flex items-center gap-2">
+                        <span>🏆</span> WORLD CUP <span class="text-yellow-400 font-normal text-sm" id="wc-hub-stage">GROUP STAGE</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Control rankings, view match brackets, and advance towards the Finals</p>
                 </div>
-                <p class="text-xs text-slate-300 font-semibold mb-6">
-                    Status: <span id="lobby-status-text" class="text-yellow-400 animate-pulse">Awaiting opponent...</span>
-                </p>
-                <button onclick="cancelLobby()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase rounded-lg border border-slate-700 transition">Cancel Match</button>
+                <div class="flex items-center gap-4 bg-slate-950 px-4 py-2 rounded-lg border border-slate-800">
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">YOUR NATION</span>
+                        <div class="font-extrabold text-sm text-yellow-400 uppercase" id="wc-hub-player-team"></div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Tab Selectors -->
+            <div class="w-full flex gap-2 mb-4 bg-slate-900 p-1 rounded-lg border border-slate-800/80 text-xs font-bold">
+                <button onclick="switchWCTab('standings')" id="tab-wc-standings" class="flex-1 py-2 rounded bg-yellow-400 text-black uppercase transition shadow">Group Standings</button>
+                <button onclick="switchWCTab('fixtures')" id="tab-wc-fixtures" class="flex-1 py-2 rounded hover:bg-slate-800 text-slate-400 uppercase transition">Fixture Matchdays</button>
+                <button onclick="switchWCTab('bracket')" id="tab-wc-bracket" class="flex-1 py-2 rounded hover:bg-slate-800 text-slate-400 uppercase transition">Final Bracket</button>
+            </div>
+
+            <!-- GROUP STANDINGS TAB VIEW -->
+            <div id="wc-view-standings" class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 12 Groups standings view -->
+                <div class="lg:col-span-2 space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scroll" id="wc-groups-container"></div>
+                <!-- 3rd Place wildcards -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg h-fit">
+                    <span class="text-xs text-yellow-400 font-black tracking-wider uppercase block mb-1">3RD PLACE WILD CARDS</span>
+                    <p class="text-[10px] text-slate-400 mb-4">Top 8 best 3rd place countries advance to Round of 32</p>
+                    <div id="wc-third-place-container" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-scroll"></div>
+                </div>
+            </div>
+
+            <!-- FIXTURE MATCHDAYS TAB VIEW -->
+            <div id="wc-view-fixtures" class="w-full hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap gap-4 items-center justify-between shadow-lg">
+                    <div>
+                        <h4 class="font-extrabold text-white text-lg">Matchday Actions</h4>
+                        <p class="text-xs text-slate-400">Play your match manually or Quick-Sim instantly to advance the round.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="wc-fixtures-container"></div>
+            </div>
+
+            <!-- KNOCKOUT BRACKET TAB VIEW -->
+            <div id="wc-view-bracket" class="w-full hidden overflow-x-auto custom-scroll min-h-[65vh] p-4 bg-slate-900 border border-slate-800 rounded-xl shadow-lg">
+                <div class="flex gap-8 items-start min-w-[1400px] h-full" id="wc-bracket-container">
+                    <!-- Brackets Round nodes injected here -->
+                </div>
+            </div>
+
+            <!-- Exit WC -->
+            <button onclick="showScreen('setup')" class="mt-6 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase rounded-lg border border-slate-700 transition">Quit Tournament</button>
         </main>
 
         <!-- GAME SCREEN -->
         <main id="screen-game" class="hidden flex-1 flex-col items-center justify-center px-4 py-2 w-full max-w-6xl mx-auto select-none">
             
             <!-- Scoreboard -->
-            <div class="w-full flex justify-between items-center bg-slate-900/95 border border-cyan-500/30 px-6 py-4 rounded-xl shadow-2xl mb-4 relative overflow-hidden backdrop-blur">
+            <div class="w-full flex justify-between items-center bg-slate-900/95 border border-cyan-500/30 px-6 py-4 rounded-xl shadow-2xl mb-4 relative overflow-hidden backdrop-blur font-mono">
                 <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-cyan-500 to-yellow-500"></div>
                 
                 <div class="flex items-center gap-6">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 font-sans">
                         <div id="sb-t1-color" class="w-4 h-8 rounded bg-red-600"></div>
                         <div>
                             <h3 class="text-sm font-black text-slate-400 tracking-wider">HOME</h3>
@@ -235,7 +265,7 @@
                         <span id="score2-val" class="text-3xl font-mono font-black text-yellow-400">0</span>
                     </div>
 
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 font-sans">
                         <div>
                             <h3 class="text-sm font-black text-slate-400 tracking-wider text-right">AWAY</h3>
                             <h4 id="sb-t2-abv" class="text-2xl font-black text-white text-right">RMA</h4>
@@ -244,14 +274,14 @@
                     </div>
                 </div>
 
-                <div class="hidden md:flex flex-col items-center">
+                <div class="hidden md:flex flex-col items-center font-sans">
                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">STADIUM CROWD VIBE</span>
                     <div id="crowd-bars" class="flex gap-0.5 items-end h-6 mt-1">
                         <!-- Bars injected via JS -->
                     </div>
                 </div>
 
-                <div class="text-right">
+                <div class="text-right font-sans">
                     <span class="text-[10px] bg-red-600 px-2 py-0.5 rounded text-white font-extrabold uppercase tracking-widest animate-pulse">LIVE</span>
                     <div class="text-2xl font-black font-mono mt-1 text-white">
                         <span id="match-timer-val">0</span>'<span class="text-xs text-slate-400 font-sans font-medium">/ <span id="match-timer-max">90</span>'</span>
@@ -287,7 +317,7 @@
                     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 uppercase tracking-tighter mb-1">FULL-TIME WHISTLE</h2>
                     <p class="text-slate-400 text-xs uppercase tracking-widest mb-6">Stadium final match results</p>
 
-                    <div class="bg-slate-900 border-2 border-slate-800 p-6 rounded-2xl w-full max-w-sm mb-6">
+                    <div class="bg-slate-900 border-2 border-slate-800 p-6 rounded-2xl w-full max-w-sm mb-6 shadow-xl">
                         <div id="winner-block"></div>
                         <div class="flex justify-around items-center mt-6 pt-4 border-t border-slate-800">
                             <div>
@@ -302,8 +332,9 @@
                         </div>
                     </div>
                     <div class="flex gap-4">
-                        <button onclick="launchMatch()" class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 text-xs font-black uppercase rounded-lg shadow-lg transition">Rematch Arena</button>
-                        <button onclick="showScreen('menu')" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase rounded-lg border border-slate-700 transition">Main Menu</button>
+                        <button id="btn-rematch-normal" onclick="launchMatch()" class="px-6 py-2.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 text-xs font-black uppercase rounded-lg shadow-lg transition">Rematch Arena</button>
+                        <button id="btn-advance-wc" onclick="exitWCMatchToHub()" class="hidden px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black uppercase rounded-lg shadow-lg transition">Advance Round</button>
+                        <button id="btn-back-menu-game" onclick="showScreen('menu')" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold uppercase rounded-lg border border-slate-700 transition">Quit Match</button>
                     </div>
                 </div>
             </div>
@@ -329,95 +360,118 @@
         // --- DEFINE GLOBAL DOM SELECTOR HELPER BEFORE FIRST USE ---
         const $ = id => document.getElementById(id);
 
-        // --- SAFE FIREBASE DECORATOR GUARD ---
-        let fbConfig = { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
-        
-        try {
-            const savedConfig = localStorage.getItem('fc26_custom_firebase_config');
-            if (savedConfig) {
-                fbConfig = JSON.parse(savedConfig);
-            } else if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                fbConfig = JSON.parse(__firebase_config);
-            }
-        } catch (e) {
-            console.log("Fallback context applied.");
-        }
-        
-        let app, auth, db;
-        let user = null;
-        let lobbyRef = null;
-        let unsubLobby = null;
+        // --- Data: Standard Exhibition Teams ---
+        const STANDARD_TEAMS = [
+            { name: "AFC Bournemouth", abbrev: "BOU", primary: "#b50e12", secondary: "#000000", rating: 76 },
+            { name: "Arsenal", abbrev: "ARS", primary: "#EF0107", secondary: "#FFFFFF", rating: 85 },
+            { name: "Aston Villa", abbrev: "AVL", primary: "#95BFE5", secondary: "#670E36", rating: 81 },
+            { name: "Chelsea", abbrev: "CHE", primary: "#034694", secondary: "#FFFFFF", rating: 84 },
+            { name: "Liverpool", abbrev: "LIV", primary: "#C8102E", secondary: "#F6EB61", rating: 86 },
+            { name: "Manchester City", abbrev: "MCI", primary: "#6CABDD", secondary: "#1C2C5B", rating: 88 },
+            { name: "Manchester United", abbrev: "MUN", primary: "#DA291C", secondary: "#000000", rating: 84 },
+            { name: "Tottenham Hotspur", abbrev: "TOT", primary: "#132257", secondary: "#FFFFFF", rating: 82 },
+            { name: "Atlético Madrid", abbrev: "ATM", primary: "#CB3524", secondary: "#1C3C73", rating: 85 },
+            { name: "Barcelona", abbrev: "BAR", primary: "#004D98", secondary: "#A50044", rating: 87 },
+            { name: "Real Madrid", abbrev: "RMA", primary: "#FFFFFF", secondary: "#122F67", rating: 89 },
+            { name: "Sevilla", abbrev: "SEV", primary: "#FFFFFF", secondary: "#FF0000", rating: 79 }
+        ];
 
-        // --- Data ---
-        const TEAMS = {
-            "Premier League": [
-                { name: "AFC Bournemouth", abbrev: "BOU", primary: "#b50e12", secondary: "#000000" },
-                { name: "Arsenal", abbrev: "ARS", primary: "#EF0107", secondary: "#FFFFFF" },
-                { name: "Aston Villa", abbrev: "AVL", primary: "#95BFE5", secondary: "#670E36" },
-                { name: "Brentford", abbrev: "BRE", primary: "#e30613", secondary: "#fbec5d" },
-                { name: "Brighton & Hove Albion", abbrev: "BHA", primary: "#0057B8", secondary: "#FFFFFF" },
-                { name: "Chelsea", abbrev: "CHE", primary: "#034694", secondary: "#FFFFFF" },
-                { name: "Coventry City", abbrev: "COV", primary: "#87CEFA", secondary: "#000000" },
-                { name: "Crystal Palace", abbrev: "CRY", primary: "#1B458F", secondary: "#C4122E" },
-                { name: "Everton", abbrev: "EVE", primary: "#003399", secondary: "#FFFFFF" },
-                { name: "Fulham", abbrev: "FUL", primary: "#FFFFFF", secondary: "#000000" },
-                { name: "Hull City", abbrev: "HUL", primary: "#F5910F", secondary: "#000000" },
-                { name: "Ipswich Town", abbrev: "IPS", primary: "#0000FF", secondary: "#FFFFFF" },
-                { name: "Leeds United", abbrev: "LEE", primary: "#FFFFFF", secondary: "#FFCD00" },
-                { name: "Liverpool", abbrev: "LIV", primary: "#C8102E", secondary: "#F6EB61" },
-                { name: "Manchester City", abbrev: "MCI", primary: "#6CABDD", secondary: "#1C2C5B" },
-                { name: "Manchester United", abbrev: "MUN", primary: "#DA291C", secondary: "#000000" },
-                { name: "Newcastle United", abbrev: "NEW", primary: "#000000", secondary: "#FFFFFF" },
-                { name: "Nottingham Forest", abbrev: "NFO", primary: "#DD0000", secondary: "#FFFFFF" },
-                { name: "Sunderland", abbrev: "SUN", primary: "#FF0000", secondary: "#FFFFFF" },
-                { name: "Tottenham Hotspur", abbrev: "TOT", primary: "#132257", secondary: "#FFFFFF" }
-            ],
-            "La Liga": [
-                { name: "Alavés", abbrev: "ALA", primary: "#0000FF", secondary: "#FFFFFF" },
-                { name: "Athletic Club", abbrev: "ATH", primary: "#E30613", secondary: "#FFFFFF" },
-                { name: "Atlético Madrid", abbrev: "ATM", primary: "#CB3524", secondary: "#1C3C73" },
-                { name: "Barcelona", abbrev: "BAR", primary: "#004D98", secondary: "#A50044" },
-                { name: "Celta Vigo", abbrev: "CEL", primary: "#87ADDF", secondary: "#FFFFFF" },
-                { name: "Elche", abbrev: "ELC", primary: "#008751", secondary: "#FFFFFF" },
-                { name: "Espanyol", abbrev: "ESP", primary: "#008CD2", secondary: "#FFFFFF" },
-                { name: "Getafe", abbrev: "GET", primary: "#0000C8", secondary: "#FFFFFF" },
-                { name: "Girona", abbrev: "GIR", primary: "#E30613", secondary: "#FFFFFF" },
-                { name: "Levante", abbrev: "LEV", primary: "#004D98", secondary: "#A50044" },
-                { name: "Mallorca", abbrev: "MAL", primary: "#E30613", secondary: "#000000" },
-                { name: "Osasuna", abbrev: "OSA", primary: "#9E1B22", secondary: "#162E5B" },
-                { name: "Real Oviedo", abbrev: "OVI", primary: "#0000FF", secondary: "#FFFFFF" },
-                { name: "Rayo Vallecano", abbrev: "RAY", primary: "#FFFFFF", secondary: "#FF0000" },
-                { name: "Real Betis", abbrev: "BET", primary: "#009A44", secondary: "#FFFFFF" },
-                { name: "Real Madrid", abbrev: "RMA", primary: "#FFFFFF", secondary: "#122F67" },
-                { name: "Real Sociedad", abbrev: "RSO", primary: "#0000FF", secondary: "#FFFFFF" },
-                { name: "Sevilla", abbrev: "SEV", primary: "#FFFFFF", secondary: "#FF0000" },
-                { name: "Valencia", abbrev: "VAL", primary: "#FFFFFF", secondary: "#FFA500" },
-                { name: "Villarreal", abbrev: "VIL", primary: "#FFDF00", secondary: "#0000FF" }
-            ]
+        // --- Data: 48 World Cup Teams ---
+        const WC_TEAMS = [
+            { name: "Mexico", abbrev: "MEX", rating: 80, primary: "#006847", secondary: "#FFFFFF", stripes: "V", badge: "#CE1126" },
+            { name: "South Africa", abbrev: "RSA", rating: 75, primary: "#007A4D", secondary: "#FFB612", stripes: "V", badge: "#000000" },
+            { name: "South Korea", abbrev: "KOR", rating: 82, primary: "#C20E1A", secondary: "#000000", stripes: "H", badge: "#FFFFFF" },
+            { name: "Czechia", abbrev: "CZE", rating: 79, primary: "#ED1B24", secondary: "#11457E", stripes: "V", badge: "#FFFFFF" },
+            { name: "Canada", abbrev: "CAN", rating: 78, primary: "#FF0000", secondary: "#FFFFFF", stripes: "V", badge: "#FF0000" },
+            { name: "Bosnia and Herzegovina", abbrev: "BIH", rating: 74, primary: "#002F6C", secondary: "#FFCD00", stripes: "H", badge: "#002F6C" },
+            { name: "Qatar", abbrev: "QAT", rating: 73, primary: "#8A1538", secondary: "#FFFFFF", stripes: "H", badge: "#8A1538" },
+            { name: "Switzerland", abbrev: "SUI", rating: 84, primary: "#FF0000", secondary: "#FFFFFF", stripes: "H", badge: "#FF0000" },
+            { name: "Brazil", abbrev: "BRA", rating: 92, primary: "#FEDF00", secondary: "#009B3A", stripes: "H", badge: "#002776" },
+            { name: "Morocco", abbrev: "MAR", rating: 86, primary: "#C1272D", secondary: "#006233", stripes: "V", badge: "#C1272D" },
+            { name: "Haiti", abbrev: "HAI", rating: 68, primary: "#00209F", secondary: "#D21034", stripes: "V", badge: "#FFFFFF" },
+            { name: "Scotland", abbrev: "SCO", rating: 78, primary: "#002B5C", secondary: "#FFFFFF", stripes: "V", badge: "#002B5C" },
+            { name: "United States", abbrev: "USA", rating: 81, primary: "#3C3B6E", secondary: "#B22234", stripes: "V", badge: "#FFFFFF" },
+            { name: "Paraguay", abbrev: "PAR", rating: 76, primary: "#D52B1E", secondary: "#0038A8", stripes: "V", badge: "#FFFFFF" },
+            { name: "Australia", abbrev: "AUS", rating: 79, primary: "#FFCD00", secondary: "#008751", stripes: "H", badge: "#000024" },
+            { name: "Turkey", abbrev: "TUR", rating: 81, primary: "#E30A17", secondary: "#FFFFFF", stripes: "V", badge: "#E30A17" },
+            { name: "Germany", abbrev: "GER", rating: 90, primary: "#FFFFFF", secondary: "#000000", stripes: "H", badge: "#FFCC00" },
+            { name: "Curaçao", abbrev: "CUW", rating: 67, primary: "#002B7F", secondary: "#F9E814", stripes: "H", badge: "#002B7F" },
+            { name: "Ivory Coast", abbrev: "CIV", rating: 80, primary: "#FF8200", secondary: "#009E60", stripes: "V", badge: "#FFFFFF" },
+            { name: "Ecuador", abbrev: "ECU", rating: 82, primary: "#FFDD00", secondary: "#0F204B", stripes: "V", badge: "#ED1C24" },
+            { name: "Netherlands", abbrev: "NED", rating: 89, primary: "#F36C21", secondary: "#FFFFFF", stripes: "V", badge: "#21468B" },
+            { name: "Japan", abbrev: "JPN", rating: 84, primary: "#000555", secondary: "#FFFFFF", stripes: "H", badge: "#BC002D" },
+            { name: "Sweden", abbrev: "SWE", rating: 81, primary: "#FECC02", secondary: "#006AA7", stripes: "V", badge: "#FECC02" },
+            { name: "Tunisia", abbrev: "TUN", rating: 75, primary: "#E30A17", secondary: "#FFFFFF", stripes: "H", badge: "#E30A17" },
+            { name: "Belgium", abbrev: "BEL", rating: 87, primary: "#E30A17", secondary: "#000000", stripes: "V", badge: "#FDDA24" },
+            { name: "Egypt", abbrev: "EGY", rating: 80, primary: "#CE1126", secondary: "#000000", stripes: "H", badge: "#FFFFFF" },
+            { name: "Iran", abbrev: "IRN", rating: 77, primary: "#239F40", secondary: "#DA121A", stripes: "V", badge: "#FFFFFF" },
+            { name: "New Zealand", abbrev: "NZL", rating: 72, primary: "#000000", secondary: "#FFFFFF", stripes: "V", badge: "#000000" },
+            { name: "Spain", abbrev: "ESP", rating: 91, primary: "#C60B1E", secondary: "#FFC400", stripes: "H", badge: "#C60B1E" },
+            { name: "Cape Verde", abbrev: "CPV", rating: 74, primary: "#003893", secondary: "#CF2027", stripes: "V", badge: "#FFFFFF" },
+            { name: "Saudi Arabia", abbrev: "KSA", rating: 74, primary: "#006C35", secondary: "#FFFFFF", stripes: "V", badge: "#006C35" },
+            { name: "Uruguay", abbrev: "URU", rating: 83, primary: "#55B5E5", secondary: "#000000", stripes: "H", badge: "#FCBF49" },
+            { name: "France", abbrev: "FRA", rating: 93, primary: "#002395", secondary: "#ED2939", stripes: "V", badge: "#FFFFFF" },
+            { name: "Senegal", abbrev: "SEN", rating: 83, primary: "#00853F", secondary: "#FDEF42", stripes: "V", badge: "#E31B23" },
+            { name: "Iraq", abbrev: "IRQ", rating: 74, primary: "#007A3D", secondary: "#000000", stripes: "H", badge: "#FFFFFF" },
+            { name: "Norway", abbrev: "NOR", rating: 80, primary: "#BA0C2F", secondary: "#00205B", stripes: "V", badge: "#FFFFFF" },
+            { name: "Argentina", abbrev: "ARG", rating: 94, primary: "#43A1D5", secondary: "#FFFFFF", stripes: "V", badge: "#FCBF49" },
+            { name: "Algeria", abbrev: "ALG", rating: 78, primary: "#006233", secondary: "#FFFFFF", stripes: "V", badge: "#D21034" },
+            { name: "Austria", abbrev: "AUT", rating: 81, primary: "#ED2939", secondary: "#FFFFFF", stripes: "H", badge: "#ED2939" },
+            { name: "Jordan", abbrev: "JOR", rating: 72, primary: "#000000", secondary: "#CE1126", stripes: "H", badge: "#FFFFFF" },
+            { name: "Portugal", abbrev: "POR", rating: 91, primary: "#FF0000", secondary: "#006600", stripes: "V", badge: "#FECC00" },
+            { name: "DR Congo", abbrev: "COD", rating: 74, primary: "#007FFF", secondary: "#CE102F", stripes: "H", badge: "#FDD116" },
+            { name: "Uzbekistan", abbrev: "UZB", rating: 73, primary: "#0099B5", secondary: "#111111", stripes: "H", badge: "#FFFFFF" },
+            { name: "Colombia", abbrev: "COL", rating: 84, primary: "#FCD116", secondary: "#003893", stripes: "V", badge: "#CE1126" },
+            { name: "England", abbrev: "ENG", rating: 92, primary: "#FFFFFF", secondary: "#CE1124", stripes: "V", badge: "#00205B" },
+            { name: "Croatia", abbrev: "CRO", rating: 85, primary: "#FF0000", secondary: "#FFFFFF", stripes: "V", badge: "#00205B" },
+            { name: "Ghana", abbrev: "GHA", rating: 76, primary: "#FFFFFF", secondary: "#CE1126", stripes: "V", badge: "#000000" },
+            { name: "Panama", abbrev: "PAN", rating: 74, primary: "#DA121A", secondary: "#002F6C", stripes: "H", badge: "#FFFFFF" }
+        ];
+
+        const WC_GROUPS_SETUP = {
+            "Group A": ["Mexico", "South Africa", "South Korea", "Czechia"],
+            "Group B": ["Canada", "Bosnia and Herzegovina", "Qatar", "Switzerland"],
+            "Group C": ["Brazil", "Morocco", "Haiti", "Scotland"],
+            "Group D": ["United States", "Paraguay", "Australia", "Turkey"],
+            "Group E": ["Germany", "Curaçao", "Ivory Coast", "Ecuador"],
+            "Group F": ["Netherlands", "Japan", "Sweden", "Tunisia"],
+            "Group G": ["Belgium", "Egypt", "Iran", "New Zealand"],
+            "Group H": ["Spain", "Cape Verde", "Saudi Arabia", "Uruguay"],
+            "Group I": ["France", "Senegal", "Iraq", "Norway"],
+            "Group J": ["Argentina", "Algeria", "Austria", "Jordan"],
+            "Group K": ["Portugal", "DR Congo", "Uzbekistan", "Colombia"],
+            "Group L": ["England", "Croatia", "Ghana", "Panama"]
         };
-        const ALL_TEAMS = [...TEAMS["Premier League"], ...TEAMS["La Liga"]];
 
-        // --- State ---
+        // --- Core State ---
         let screen = 'menu';
         let gameMode = 'single';
         let difficulty = 'medium';
         let matchDuration = 90;
-        let team1 = ALL_TEAMS[13]; // LIV
-        let team2 = ALL_TEAMS[35]; // RMA
+        let submode = 'exhibition'; // exhibition, worldcup
+
+        // Current exhibition match players
+        let team1 = STANDARD_TEAMS[0]; 
+        let team2 = STANDARD_TEAMS[1]; 
         
         let score1 = 0;
         let score2 = 0;
         let matchMinutes = 0;
         let gameState = 'warmup'; // warmup, playing, goal, ended
         let countdown = 3;
-        
-        let isHost = false;
-        let myLobbyCode = '';
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'fc26-vanilla';
 
-        // --- Physics Engine ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // --- World Cup Campaign State ---
+        let wcUserTeam = null;
+        let wcGroupStages = {};
+        let wcMatchdays = [];
+        let wcCurrentMatchday = 0; // 0, 1, 2
+        let wcKnockoutRound = ''; // r32, r16, qf, sf, third, final, ended
+        let wcKnockoutMatches = [];
+        let activeWCHubTab = 'standings';
+        let activeWCUserMatchIndex = -1; // -1 if eliminated or not their match
+
+        // --- Physics Engine variables ---
+        let canvas, ctx;
         const court = { width: 1000, height: 600, border: 15 };
         const goalHeight = 160;
         const goalWidth = 40;
@@ -444,7 +498,7 @@
 
         window.showScreen = (s) => {
             screen = s;
-            ['screen-menu', 'screen-how-to-play', 'screen-setup', 'screen-lobby', 'screen-game'].forEach(id => {
+            ['screen-menu', 'screen-how-to-play', 'screen-setup', 'screen-wc-hub', 'screen-game'].forEach(id => {
                 const el = $(id);
                 if (el) el.classList.add('hidden');
             });
@@ -452,27 +506,57 @@
             if (targetEl) targetEl.classList.remove('hidden');
             
             if (s === 'setup') {
-                $('ai-diff-container').classList.toggle('hidden', gameMode !== 'single');
-                $('online-controls').classList.toggle('hidden', gameMode !== 'online');
-                $('btn-launch').classList.toggle('hidden', gameMode === 'online');
+                const aiDiff = $('ai-diff-container');
+                if (aiDiff) aiDiff.classList.toggle('hidden', gameMode !== 'single');
+                
+                const modeSelector = $('single-player-mode-selector');
+                if (modeSelector) modeSelector.classList.toggle('hidden', gameMode !== 'single');
+                
+                // Default to exhibition on load
+                if (gameMode === 'single') {
+                    selectSubmode('exhibition');
+                } else {
+                    selectSubmode('exhibition'); // Local is always exhibition
+                }
             }
-
-            $('btn-exit').classList.toggle('hidden', s !== 'game' && s !== 'lobby');
-            $('online-indicator').classList.toggle('hidden', gameMode !== 'online' || (s !== 'lobby' && s !== 'game'));
-            if (gameMode === 'online') $('header-lobby-code').innerText = myLobbyCode;
         };
 
         window.setDuration = (d) => {
             matchDuration = d;
-            ['dur-45', 'dur-90', 'dur-180'].forEach(id => $(id).className = "px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400");
-            $(`dur-${d}`).className = "px-3 py-1.5 rounded text-xs font-bold transition bg-cyan-500 text-black";
-            $('match-timer-max').innerText = d;
+            ['dur-45', 'dur-90', 'dur-180'].forEach(id => {
+                const el = $(id);
+                if (el) el.className = "px-3 py-1.5 rounded text-xs font-bold transition bg-slate-950 hover:bg-slate-800 text-slate-400";
+            });
+            const durEl = $(`dur-${d}`);
+            if (durEl) durEl.className = "px-3 py-1.5 rounded text-xs font-bold transition bg-cyan-500 text-black";
+            const maxVal = $('match-timer-max');
+            if (maxVal) maxVal.innerText = d;
         };
 
         window.setDiff = (d) => {
             difficulty = d;
-            ['diff-easy', 'diff-medium', 'diff-hard'].forEach(id => $(id).className = "px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400");
-            $(`diff-${d}`).className = "px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-yellow-400 text-black";
+            ['diff-easy', 'diff-medium', 'diff-hard'].forEach(id => {
+                const el = $(id);
+                if (el) el.className = "px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-slate-950 hover:bg-slate-800 text-slate-400";
+            });
+            const diffEl = $(`diff-${d}`);
+            if (diffEl) diffEl.className = "px-3 py-1.5 rounded text-xs font-bold transition uppercase bg-yellow-400 text-black";
+        };
+
+        // --- SUBMODE SELECTOR ---
+        window.selectSubmode = (mode) => {
+            submode = mode;
+            const isEx = mode === 'exhibition';
+            
+            const bEx = $('btn-mode-exhibition');
+            const bWc = $('btn-mode-worldcup');
+            if (bEx) bEx.className = isEx ? "flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-yellow-400 text-slate-950 border border-yellow-400" : "flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:text-white";
+            if (bWc) bWc.className = !isEx ? "flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-yellow-400 text-slate-950 border border-yellow-400" : "flex-1 py-2.5 rounded-lg text-xs font-black uppercase transition-all bg-slate-900 text-slate-400 border border-slate-800 hover:text-white";
+
+            const stdPanel = $('setup-standard-panel');
+            const wcPanel = $('worldcup-config-panel');
+            if (stdPanel) stdPanel.classList.toggle('hidden', !isEx);
+            if (wcPanel) wcPanel.classList.toggle('hidden', isEx);
         };
 
         window.launchMatch = () => {
@@ -480,230 +564,660 @@
             resetMatchFully();
         };
 
-        window.cancelLobby = async () => {
-            if(unsubLobby) unsubLobby();
-            if(lobbyRef) {
-                await lobbyRef.delete().catch(err => console.log("Lobby deleted locally: ", err));
-                lobbyRef = null;
-            }
-            showScreen('setup');
-        };
-
-        window.hostLobby = async () => {
-            if(!db || !user) return msg('Awaiting secure database connection...');
-            myLobbyCode = Math.floor(100000 + Math.random() * 900000).toString();
-            isHost = true;
-            msg('Creating Match Room...');
-            
-            lobbyRef = db.doc('artifacts/' + appId + '/public/data/lobbies/' + myLobbyCode);
-            await lobbyRef.set({
-                hostId: user.uid, hostTeam: team1, guestId: null, guestTeam: null, status: 'waiting',
-                ballState: { x: 500, y: 300, vx: 0, vy: 0 },
-                player1State: { x: 220, y: 300, vx: 0, vy: 0, score: 0 },
-                player2State: { x: 780, y: 300, vx: 0, vy: 0, score: 0 },
-                gkState: { y1: 300, y2: 300 },
-                gameState: 'warmup', timeElapsed: 0, lastUpdated: Date.now()
-            });
-
-            $('display-lobby-code').innerText = myLobbyCode;
-            showScreen('lobby');
-
-            unsubLobby = lobbyRef.onSnapshot(snap => {
-                if(!snap.exists) return;
-                const d = snap.data();
-                if(d.status === 'ready') {
-                    team2 = d.guestTeam;
-                    $('lobby-status-text').innerText = "Opponent Connected! Loading...";
-                    setTimeout(window.launchMatch, 1500);
-                }
-                if(!isHost && d.status === 'playing') {
-                    p1.x = d.player1State.x; p1.y = d.player1State.y;
-                    ball.x = d.ballState.x; ball.y = d.ballState.y;
-                }
-            });
-        };
-
-        window.joinLobby = async () => {
-            if(!db || !user) return;
-            const c = $('join-input').value.trim();
-            if(!c) return msg('Please enter a code');
-            msg('Searching...');
-            
-            lobbyRef = db.doc('artifacts/' + appId + '/public/data/lobbies/' + c);
-            const sn = await lobbyRef.get();
-            if(!sn.exists || sn.data().status !== 'waiting') return msg('Lobby not found or full.');
-            
-            isHost = false;
-            team1 = sn.data().hostTeam;
-            myLobbyCode = c;
-            
-            await lobbyRef.update({ guestId: user.uid, guestTeam: team2, status: 'ready' });
-            msg('Match Joined!');
-
-            unsubLobby = lobbyRef.onSnapshot(snap => {
-                if(!snap.exists) {
-                    msg('Lobby was closed or disbanded by the host.');
-                    setTimeout(() => {
-                        showScreen('setup');
-                    }, 2000);
-                    if(unsubLobby) unsubLobby();
-                    lobbyRef = null;
-                    return;
-                }
-                const d = snap.data();
-                if(d.status === 'playing') {
-                    p1.x = d.player1State.x; p1.y = d.player1State.y;
-                    ball.x = d.ballState.x; ball.y = d.ballState.y;
-                    if(d.gkState) {
-                        gk1.y = d.gkState.y1;
-                        gk2.y = d.gkState.y2;
-                    }
-                    score1 = d.player1State.score; score2 = d.player2State.score;
-                    matchMinutes = Math.floor(d.timeElapsed);
-                    updateScoreUI();
-                }
-            });
-            setTimeout(window.launchMatch, 1500);
-        };
-
-        window.toggleConfigPanel = () => {
-            $('custom-config-panel').classList.toggle('hidden');
-        };
-
-        window.saveCustomConfig = () => {
-            try {
-                const rawJson = $('config-json-input').value.trim();
-                const parsed = JSON.parse(rawJson);
-                if (!parsed.projectId || !parsed.apiKey) {
-                    alert("Invalid configuration. Please include projectId and apiKey.");
-                    return;
-                }
-                localStorage.setItem('fc26_custom_firebase_config', JSON.stringify(parsed));
-                fbConfig = parsed;
-                configureFirebase();
-                alert("Database Configuration updated successfully! Standing by to connect.");
-                $('custom-config-panel').classList.add('hidden');
-            } catch(e) {
-                alert("Error parsing JSON: " + e.message);
-            }
-        };
-
-        // --- APP INITIALIZATION ---
-        function initApp() {
-            // Attempt to connect to Database
-            configureFirebase();
-
-            // Populate Dropdowns
+        // --- SETUP SCREEN Badges & Selects ---
+        function populateSelectors() {
             const s1 = $('select-team1');
             const s2 = $('select-team2');
             
-            let pLhtml = `<optgroup label="Premier League">`;
-            TEAMS["Premier League"].forEach(t => pLhtml += `<option value="${t.name}">${t.name} (${t.abbrev})</option>`);
-            pLhtml += `</optgroup>`;
-            
-            let lLahtml = `<optgroup label="La Liga">`;
-            TEAMS["La Liga"].forEach(t => lLahtml += `<option value="${t.name}">${t.name} (${t.abbrev})</option>`);
-            lLahtml += `</optgroup>`;
+            if (s1 && s2) {
+                let options = STANDARD_TEAMS.map(t => `<option value="${t.name}">${t.name} (${t.abbrev})</option>`).join("");
+                s1.innerHTML = options;
+                s2.innerHTML = options;
 
-            s1.innerHTML = pLhtml + lLahtml;
-            s2.innerHTML = lLahtml + pLhtml;
+                s1.value = STANDARD_TEAMS[0].name;
+                s2.value = STANDARD_TEAMS[1].name;
+                team1 = STANDARD_TEAMS[0];
+                team2 = STANDARD_TEAMS[1];
 
-            s1.value = team1.name;
-            s2.value = team2.name;
+                s1.addEventListener('change', e => { team1 = STANDARD_TEAMS.find(t=>t.name === e.target.value); updateTeamCards(); });
+                s2.addEventListener('change', e => { team2 = STANDARD_TEAMS.find(t=>t.name === e.target.value); updateTeamCards(); });
+            }
 
-            s1.addEventListener('change', e => { team1 = ALL_TEAMS.find(t=>t.name === e.target.value); updateTeamCards(); });
-            s2.addEventListener('change', e => { team2 = ALL_TEAMS.find(t=>t.name === e.target.value); updateTeamCards(); });
+            // Populate World Cup selector
+            const wcSel = $('select-wc-user-team');
+            if (wcSel) {
+                let wcOptions = [...WC_TEAMS].sort((a,b)=>a.name.localeCompare(b.name)).map(t => `<option value="${t.name}">${t.name}</option>`).join("");
+                wcSel.innerHTML = wcOptions;
+            }
 
             updateTeamCards();
-            window.addEventListener('keydown', e => keysPressed[e.key.toLowerCase()] = true);
-            window.addEventListener('keyup', e => keysPressed[e.key.toLowerCase()] = false);
-            
-            // Resize handler
-            window.addEventListener('resize', () => {
-                canvas.style.width = '100%';
-                canvas.style.height = 'auto';
-            });
-
-            // Generate crowd sound wave visualizer bars
-            const cb = $('crowd-bars');
-            cb.innerHTML = '';
-            for(let i=0; i<15; i++) {
-                cb.innerHTML += `<div class="w-1.5 rounded-t bg-cyan-400 transition-all duration-100" id="cb-${i}"></div>`;
-            }
-
-            $('btn-exit').addEventListener('click', async () => {
-                showScreen('menu');
-                if(unsubLobby) unsubLobby();
-                if(lobbyRef) {
-                    if (isHost) {
-                        await lobbyRef.delete().catch(()=>{});
-                    }
-                    lobbyRef = null;
-                }
-                cancelAnimationFrame(reqFrame);
-                clearInterval(matchTimerInterval);
-                clearInterval(countdownInterval);
-                clearInterval(crowdInterval);
-            });
-        }
-
-        function configureFirebase() {
-            if (typeof firebase !== 'undefined' && fbConfig.projectId) {
-                try {
-                    if (firebase.apps.length > 0) {
-                        firebase.app().delete();
-                    }
-                    app = firebase.initializeApp(fbConfig);
-                    auth = firebase.auth();
-                    db = firebase.firestore();
-
-                    const setupAuth = async () => {
-                        let token;
-                        try {
-                            token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        } catch(e) {}
-
-                        if (token) {
-                            await auth.signInWithCustomToken(token).catch(()=>{});
-                        } else {
-                            await auth.signInAnonymously().catch(()=>{});
-                        }
-                    };
-                    setupAuth();
-                    auth.onAuthStateChanged(usr => { 
-                        user = usr; 
-                        if (usr) {
-                            msg('Database live! Online Matchmaker ready.');
-                            $('config-json-input').value = JSON.stringify(fbConfig, null, 2);
-                        }
-                    });
-                } catch(e) {
-                    console.warn("Database failed to initialize: ", e.message);
-                    msg('Configure Database (⚙️) to unlock online gameplay.');
-                }
-            } else {
-                msg('Configure Database (⚙️) to unlock online gameplay.');
-            }
-        }
-
-        function msg(text) {
-            const el = $('online-msg');
-            el.classList.remove('hidden');
-            el.innerText = text;
         }
 
         function updateTeamCards() {
-            $('t1-bg-abbrev').innerText = team1.abbrev;
-            $('t1-jersey').style.backgroundColor = team1.primary;
-            $('t1-jersey').style.border = `6px solid ${team1.secondary}`;
-            $('t1-jersey-text').innerText = team1.abbrev;
-            $('t1-name-display').innerText = team1.name;
+            if (team1) {
+                const t1Ab = $('t1-bg-abbrev');
+                const t1J = $('t1-jersey');
+                const t1Jt = $('t1-jersey-text');
+                const t1Nd = $('t1-name-display');
+                if (t1Ab) t1Ab.innerText = team1.abbrev;
+                if (t1J) {
+                    t1J.style.backgroundColor = team1.primary;
+                    t1J.style.border = `6px solid ${team1.secondary}`;
+                }
+                if (t1Jt) t1Jt.innerText = team1.abbrev;
+                if (t1Nd) t1Nd.innerText = team1.name;
+            }
 
-            $('t2-bg-abbrev').innerText = team2.abbrev;
-            $('t2-jersey').style.backgroundColor = team2.primary;
-            $('t2-jersey').style.border = `6px solid ${team2.secondary}`;
-            $('t2-jersey-text').innerText = team2.abbrev;
-            $('t2-name-display').innerText = team2.name;
+            if (team2) {
+                const t2Ab = $('t2-bg-abbrev');
+                const t2J = $('t2-jersey');
+                const t2Jt = $('t2-jersey-text');
+                const t2Nd = $('t2-name-display');
+                if (t2Ab) t2Ab.innerText = team2.abbrev;
+                if (t2J) {
+                    t2J.style.backgroundColor = team2.primary;
+                    t2J.style.border = `6px solid ${team2.secondary}`;
+                }
+                if (t2Jt) t2Jt.innerText = team2.abbrev;
+                if (t2Nd) t2Nd.innerText = team2.name;
+            }
+        }
+
+        // --- WORLD CUP 2026 LOGIC ---
+        window.startWorldCupCampaign = () => {
+            const userTeamName = $('select-wc-user-team').value;
+            wcUserTeam = WC_TEAMS.find(t => t.name === userTeamName);
+            $('wc-hub-player-team').innerText = wcUserTeam.name;
+            
+            // Build Groups Standings Object
+            wcGroupStages = {};
+            for (let gName in WC_GROUPS_SETUP) {
+                wcGroupStages[gName] = WC_GROUPS_SETUP[gName].map(cName => {
+                    const country = WC_TEAMS.find(t => t.name === cName);
+                    return {
+                        name: country.name, abbrev: country.abbrev, rating: country.rating,
+                        played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0
+                    };
+                });
+            }
+
+            // Build Group Stage Match Schedule fixtures
+            wcMatchdays = [];
+            wcCurrentMatchday = 0;
+            wcKnockoutRound = '';
+            wcKnockoutMatches = [];
+
+            const md1 = []; const md2 = []; const md3 = [];
+
+            // Define Group Matchdays mapping
+            const groupMatchdayStructure = [
+                { g: "Group A", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group B", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group C", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group D", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group E", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group F", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group G", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group H", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group I", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group J", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group K", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] },
+                { g: "Group L", m1: [0, 1, 2, 3], m2: [3, 1, 0, 2], m3: [3, 0, 1, 2] }
+            ];
+
+            groupMatchdayStructure.forEach(st => {
+                const teams = WC_GROUPS_SETUP[st.g];
+                // MD1
+                md1.push({ group: st.g, t1: teams[st.m1[0]], t2: teams[st.m1[1]], s1: null, s2: null, played: false });
+                md1.push({ group: st.g, t1: teams[st.m1[2]], t2: teams[st.m1[3]], s1: null, s2: null, played: false });
+                // MD2
+                md2.push({ group: st.g, t1: teams[st.m2[0]], t2: teams[st.m2[1]], s1: null, s2: null, played: false });
+                md2.push({ group: st.g, t1: teams[st.m2[2]], t2: teams[st.m2[3]], s1: null, s2: null, played: false });
+                // MD3
+                md3.push({ group: st.g, t1: teams[st.m3[0]], t2: teams[st.m3[1]], s1: null, s2: null, played: false });
+                md3.push({ group: st.g, t1: teams[st.m3[2]], t2: teams[st.m3[3]], s1: null, s2: null, played: false });
+            });
+
+            wcMatchdays = [md1, md2, md3];
+            openWCHub();
+        };
+
+        function openWCHub() {
+            showScreen('wc-hub');
+            updateWCHubStageUI();
+            switchWCTab('standings');
+        }
+
+        function updateWCHubStageUI() {
+            let label = "Group Stage - Matchday " + (wcCurrentMatchday + 1);
+            if (wcKnockoutRound) {
+                if (wcKnockoutRound === 'r32') label = "Round of 32";
+                else if (wcKnockoutRound === 'r16') label = "Round of 16";
+                else if (wcKnockoutRound === 'qf') label = "Quarterfinals";
+                else if (wcKnockoutRound === 'sf') label = "Semifinals";
+                else if (wcKnockoutRound === 'third') label = "3rd Place Match";
+                else if (wcKnockoutRound === 'final') label = "World Cup Final!";
+                else if (wcKnockoutRound === 'ended') label = "Tournament Ended";
+            }
+            const stageEl = $('wc-hub-stage');
+            if (stageEl) stageEl.innerText = label;
+        }
+
+        window.switchWCTab = (tab) => {
+            activeWCHubTab = tab;
+            ['standings', 'fixtures', 'bracket'].forEach(t => {
+                const btn = $(`tab-wc-${t}`);
+                const view = $(`wc-view-${t}`);
+                if (btn) btn.className = "flex-1 py-2 rounded uppercase transition font-bold " + (t === tab ? "bg-yellow-400 text-black shadow" : "hover:bg-slate-800 text-slate-400");
+                if (view) view.classList.toggle('hidden', t !== tab);
+            });
+
+            if (tab === 'standings') renderWCStandings();
+            if (tab === 'fixtures') renderWCFixtures();
+            if (tab === 'bracket') renderWCBracket();
+        };
+
+        function renderWCStandings() {
+            let groupsHtml = '';
+            for (let gName in wcGroupStages) {
+                // Sort standings
+                let sorted = [...wcGroupStages[gName]].sort((a, b) => {
+                    let gdA = a.goalsFor - a.goalsAgainst;
+                    let gdB = b.goalsFor - b.goalsAgainst;
+                    if (b.points !== a.points) return b.points - a.points;
+                    if (gdB !== gdA) return gdB - gdA;
+                    return b.goalsFor - a.goalsFor;
+                });
+
+                groupsHtml += `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow">
+                    <h4 class="font-extrabold text-yellow-400 text-sm mb-3 uppercase tracking-wider">${gName}</h4>
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="text-slate-500 border-b border-slate-800 pb-2">
+                                <th class="pb-2">Team</th>
+                                <th class="text-center pb-2">P</th>
+                                <th class="text-center pb-2">GD</th>
+                                <th class="text-center pb-2">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                sorted.forEach((team, idx) => {
+                    let gd = team.goalsFor - team.goalsAgainst;
+                    let sign = gd > 0 ? "+" : "";
+                    let isPlayer = team.name === wcUserTeam.name ? "font-bold text-yellow-400" : "";
+                    let rowBorder = idx < 2 ? "border-l-4 border-green-500 pl-1" : (idx === 2 ? "border-l-4 border-yellow-500 pl-1" : "pl-2");
+                    groupsHtml += `
+                        <tr class="border-b border-slate-800/40 py-2 hover:bg-slate-950/20 ${isPlayer}">
+                            <td class="py-2 font-semibold flex items-center gap-2">
+                                <span class="${rowBorder}">${idx+1}.</span>
+                                <span>${team.name}</span>
+                            </td>
+                            <td class="text-center py-2">${team.played}</td>
+                            <td class="text-center py-2 text-slate-400">${sign}${gd}</td>
+                            <td class="text-center py-2 font-extrabold">${team.points}</td>
+                        </tr>
+                    `;
+                });
+                groupsHtml += `</tbody></table></div>`;
+            }
+            const container = $('wc-groups-container');
+            if (container) container.innerHTML = groupsHtml;
+
+            // Render Third Place wildcards table
+            let thirdPlacers = [];
+            for (let gName in wcGroupStages) {
+                let sorted = [...wcGroupStages[gName]].sort((a, b) => {
+                    let gdA = a.goalsFor - a.goalsAgainst;
+                    let gdB = b.goalsFor - b.goalsAgainst;
+                    if (b.points !== a.points) return b.points - a.points;
+                    if (gdB !== gdA) return gdB - gdA;
+                    return b.goalsFor - a.goalsFor;
+                });
+                thirdPlacers.push({ group: gName, ...sorted[2] });
+            }
+            // Sort wildcards
+            thirdPlacers.sort((a,b) => {
+                let gdA = a.goalsFor - a.goalsAgainst;
+                let gdB = b.goalsFor - b.goalsAgainst;
+                if (b.points !== a.points) return b.points - a.points;
+                if (gdB !== gdA) return gdB - gdA;
+                return b.goalsFor - a.goalsFor;
+            });
+
+            let thirdHtml = `<table class="w-full text-xs text-left">
+                <thead>
+                    <tr class="text-slate-500 border-b border-slate-800 pb-2">
+                        <th class="pb-1">Team</th>
+                        <th class="text-center pb-1">GD</th>
+                        <th class="text-center pb-1">Pts</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            thirdPlacers.forEach((team, idx) => {
+                let gd = team.goalsFor - team.goalsAgainst;
+                let isAdvancing = idx < 8 ? "border-l-4 border-green-500 pl-1" : "border-l-4 border-red-500/40 pl-1";
+                let highlight = team.name === wcUserTeam.name ? "text-yellow-400 font-bold" : "";
+                thirdHtml += `
+                    <tr class="border-b border-slate-800/40 hover:bg-slate-950/20 ${highlight}">
+                        <td class="py-1.5 font-semibold flex items-center gap-1">
+                            <span class="${isAdvancing}">${idx+1}.</span>
+                            <span>${team.name}</span>
+                        </td>
+                        <td class="text-center py-1.5 text-slate-400">${gd > 0 ? "+" : ""}${gd}</td>
+                        <td class="text-center py-1.5 font-extrabold">${team.points}</td>
+                    </tr>
+                `;
+            });
+            thirdHtml += `</tbody></table>`;
+            const thirdCont = $('wc-third-place-container');
+            if (thirdCont) thirdCont.innerHTML = thirdHtml;
+        }
+
+        function renderWCFixtures() {
+            const container = $('wc-fixtures-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let list = [];
+            if (!wcKnockoutRound) {
+                list = wcMatchdays[wcCurrentMatchday];
+            } else {
+                list = wcKnockoutMatches;
+            }
+
+            activeWCUserMatchIndex = -1;
+
+            list.forEach((match, idx) => {
+                let t1Country = WC_TEAMS.find(t=>t.name === match.t1);
+                let t2Country = WC_TEAMS.find(t=>t.name === match.t2);
+                let isUserMatch = match.t1 === wcUserTeam.name || match.t2 === wcUserTeam.name;
+                
+                if (isUserMatch && !match.played) activeWCUserMatchIndex = idx;
+
+                let scoreLabel = match.played ? `${match.s1} - ${match.s2}` : "VS";
+                if(match.played && match.p1 !== undefined && match.p1 !== null) {
+                    scoreLabel += ` <span class="text-[10px] text-yellow-400">(${match.p1}-${match.p2} p)</span>`;
+                }
+
+                let cardStyle = isUserMatch ? "border-2 border-yellow-400 bg-slate-900/90 shadow-[0_0_15px_rgba(250,204,21,0.15)] animate-pulse-fast" : "border border-slate-800 bg-slate-900/60";
+
+                let actionHtml = '';
+                if (!match.played) {
+                    if (isUserMatch) {
+                        actionHtml = `
+                            <div class="flex gap-2 w-full mt-3">
+                                <button onclick="playWCMatch(${idx})" class="flex-1 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 text-xs font-black uppercase rounded tracking-wider transition">PLAY MATCH</button>
+                                <button onclick="simWCMatch(${idx})" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold uppercase rounded border border-slate-700 transition">QUICK-SIM</button>
+                            </div>
+                        `;
+                    } else {
+                        actionHtml = `
+                            <div class="w-full mt-3 text-center text-xs text-slate-500 uppercase font-semibold py-1.5 bg-slate-950/40 rounded border border-slate-900/50">Upcoming Simulation</div>
+                        `;
+                    }
+                } else {
+                    actionHtml = `<div class="w-full mt-3 text-center text-xs text-slate-500 uppercase tracking-widest font-bold">Match Completed</div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="${cardStyle} p-4 rounded-xl flex flex-col justify-between items-center transition relative overflow-hidden">
+                        <div class="absolute top-2 left-2 text-[10px] text-slate-500 font-extrabold uppercase">${match.group || 'KNOCKOUT'}</div>
+                        <div class="flex w-full justify-around items-center gap-2 mt-2">
+                            <div class="flex flex-col items-center gap-1 w-1/3 text-center">
+                                <div class="w-8 h-8 rounded-full border-2 border-white/10" style="background-color: ${t1Country.primary}"></div>
+                                <span class="text-xs font-extrabold tracking-wider truncate max-w-full">${match.t1}</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-mono font-black tracking-tight text-white">${scoreLabel}</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 w-1/3 text-center">
+                                <div class="w-8 h-8 rounded-full border-2 border-white/10" style="background-color: ${t2Country.primary}"></div>
+                                <span class="text-xs font-extrabold tracking-wider truncate max-w-full">${match.t2}</span>
+                            </div>
+                        </div>
+                        ${actionHtml}
+                    </div>
+                `;
+            });
+            
+            // If the user's match is not active and matches still need playing, prompt auto-sim button at the top
+            if (activeWCUserMatchIndex === -1 && !list.every(m => m.played)) {
+                container.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 text-center bg-slate-800/40 border border-slate-700 p-4 rounded-xl mb-4">
+                        <p class="text-xs text-slate-300 mb-2">You have been eliminated or have a bye. Proceed with simulation.</p>
+                        <button onclick="simRemainingMatchdayMatches()" class="px-6 py-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase text-xs rounded-lg shadow transition">Simulate Remaining Matches</button>
+                    </div>
+                ` + container.innerHTML;
+            }
+        }
+
+        function calculateWeightedSim(teamA, teamB, isKnockout = false) {
+            let lambda1 = (teamA.rating / 25) * (0.85 + Math.random() * 0.3);
+            let lambda2 = (teamB.rating / 25) * (0.85 + Math.random() * 0.3);
+
+            let s1 = Math.floor(Math.random() * (lambda1 + 1));
+            let s2 = Math.floor(Math.random() * (lambda2 + 1));
+
+            let p1 = null, p2 = null;
+
+            if (isKnockout && s1 === s2) {
+                let et1 = Math.floor(Math.random() * 2);
+                let et2 = Math.floor(Math.random() * 2);
+                s1 += et1;
+                s2 += et2;
+
+                if (s1 === s2) {
+                    p1 = 0; p2 = 0;
+                    while (p1 === p2) {
+                        p1 = Math.floor(Math.random() * 5) + 2;
+                        p2 = Math.floor(Math.random() * 5) + 2;
+                    }
+                }
+            }
+            return { s1, s2, p1, p2 };
+        }
+
+        window.simWCMatch = (idx) => {
+            let list = !wcKnockoutRound ? wcMatchdays[wcCurrentMatchday] : wcKnockoutMatches;
+            let match = list[idx];
+            if (match.played) return;
+
+            let t1Info = WC_TEAMS.find(t=>t.name === match.t1);
+            let t2Info = WC_TEAMS.find(t=>t.name === match.t2);
+
+            let res = calculateWeightedSim(t1Info, t2Info, !!wcKnockoutRound);
+
+            match.s1 = res.s1; match.s2 = res.s2;
+            match.p1 = res.p1; match.p2 = res.p2;
+            match.played = true;
+
+            if (!wcKnockoutRound) {
+                updateGroupStats(match.group, match.t1, match.t2, match.s1, match.s2);
+            }
+
+            // After simulating your match, simulate all the others automatically.
+            window.simRemainingMatchdayMatches();
+        };
+
+        window.simRemainingMatchdayMatches = () => {
+            let activeList = !wcKnockoutRound ? wcMatchdays[wcCurrentMatchday] : wcKnockoutMatches;
+            activeList.forEach((m) => {
+                if (!m.played) {
+                    let t1Info = WC_TEAMS.find(t=>t.name === m.t1);
+                    let t2Info = WC_TEAMS.find(t=>t.name === m.t2);
+                    let res = calculateWeightedSim(t1Info, t2Info, !!wcKnockoutRound);
+                    m.s1 = res.s1; m.s2 = res.s2;
+                    m.p1 = res.p1; m.p2 = res.p2;
+                    m.played = true;
+                    if (!wcKnockoutRound) updateGroupStats(m.group, m.t1, m.t2, m.s1, m.s2);
+                }
+            });
+
+            renderWCFixtures();
+            renderWCStandings();
+            renderWCBracket();
+            checkAdvancementTrigger();
+        };
+
+        window.playWCMatch = (idx) => {
+            let list = !wcKnockoutRound ? wcMatchdays[wcCurrentMatchday] : wcKnockoutMatches;
+            let match = list[idx];
+            
+            // Map team1 to User persistently
+            const isHome = match.t1 === wcUserTeam.name;
+            if (isHome) {
+                team1 = wcUserTeam;
+                team2 = WC_TEAMS.find(t => t.name === match.t2);
+            } else {
+                team1 = wcUserTeam;
+                team2 = WC_TEAMS.find(t => t.name === match.t1);
+            }
+
+            launchMatch();
+        };
+
+        window.exitWCMatchToHub = () => {
+            if (activeWCUserMatchIndex !== -1) {
+                let list = !wcKnockoutRound ? wcMatchdays[wcCurrentMatchday] : wcKnockoutMatches;
+                const match = list[activeWCUserMatchIndex];
+                const isHome = match.t1 === wcUserTeam.name;
+
+                if (isHome) {
+                    match.s1 = score1; match.s2 = score2;
+                } else {
+                    match.s1 = score2; match.s2 = score1;
+                }
+                match.played = true;
+
+                // Simple simulated penalty decider if it was a knockout draw
+                if (gameState === 'ended' && score1 === score2 && !!wcKnockoutRound) {
+                    match.p1 = Math.floor(Math.random() * 4) + 3;
+                    match.p2 = match.p1 + (Math.random() > 0.5 ? 1 : -1);
+                }
+
+                if (!wcKnockoutRound) {
+                    updateGroupStats(match.group, match.t1, match.t2, match.s1, match.s2);
+                }
+            }
+            cancelAnimationFrame(reqFrame);
+            
+            // Auto simulate the rest!
+            window.simRemainingMatchdayMatches();
+            
+            openWCHub();
+        };
+
+        function updateGroupStats(gName, t1, t2, s1, s2) {
+            let group = wcGroupStages[gName];
+            let teamA = group.find(t=>t.name === t1);
+            let teamB = group.find(t=>t.name === t2);
+
+            teamA.played++; teamB.played++;
+            teamA.goalsFor += s1; teamA.goalsAgainst += s2;
+            teamB.goalsFor += s2; teamB.goalsAgainst += s1;
+
+            if (s1 > s2) { teamA.won++; teamA.points += 3; teamB.lost++; } 
+            else if (s2 > s1) { teamB.won++; teamB.points += 3; teamA.lost++; } 
+            else { teamA.drawn++; teamA.points += 1; teamB.drawn++; teamB.points += 1; }
+        }
+
+        function checkAdvancementTrigger() {
+            let list = !wcKnockoutRound ? wcMatchdays[wcCurrentMatchday] : wcKnockoutMatches;
+            let allPlayed = list.every(m => m.played);
+            if (!allPlayed) return;
+
+            if (!wcKnockoutRound) {
+                if (wcCurrentMatchday < 2) {
+                    setTimeout(() => {
+                        wcCurrentMatchday++;
+                        updateWCHubStageUI();
+                        renderWCFixtures();
+                    }, 1500);
+                } else {
+                    setTimeout(transitionToRoundOf32, 1500);
+                }
+            } else {
+                setTimeout(advanceKnockoutRound, 1500);
+            }
+        }
+
+        function transitionToRoundOf32() {
+            let qualifiers = []; 
+            let thirdPlacers = [];
+
+            for (let gName in wcGroupStages) {
+                let sorted = [...wcGroupStages[gName]].sort((a, b) => {
+                    let gdA = a.goalsFor - a.goalsAgainst; let gdB = b.goalsFor - b.goalsAgainst;
+                    if (b.points !== a.points) return b.points - a.points;
+                    if (gdB !== gdA) return gdB - gdA; return b.goalsFor - a.goalsFor;
+                });
+                qualifiers.push(sorted[0].name); 
+                qualifiers.push(sorted[1].name); 
+                thirdPlacers.push({ name: sorted[2].name, points: sorted[2].points, gd: sorted[2].goalsFor - sorted[2].goalsAgainst, gf: sorted[2].goalsFor });
+            }
+
+            thirdPlacers.sort((a,b) => {
+                if(b.points !== a.points) return b.points - a.points;
+                if(b.gd !== a.gd) return b.gd - a.gd;
+                return b.gf - a.gf;
+            });
+
+            for(let i=0; i<8; i++) { qualifiers.push(thirdPlacers[i].name); }
+
+            wcKnockoutRound = 'r32';
+            wcKnockoutMatches = [];
+            for(let i=0; i<32; i += 2) {
+                wcKnockoutMatches.push({ t1: qualifiers[i], t2: qualifiers[i+1], s1: null, s2: null, played: false });
+            }
+
+            updateWCHubStageUI();
+            switchWCTab('bracket');
+        }
+
+        function advanceKnockoutRound() {
+            let winners = wcKnockoutMatches.map(m => {
+                if (m.s1 > m.s2) return m.t1;
+                if (m.s2 > m.s1) return m.t2;
+                return m.p1 > m.p2 ? m.t1 : m.t2; 
+            });
+
+            if (wcKnockoutRound === 'r32') {
+                wcKnockoutRound = 'r16'; wcKnockoutMatches = [];
+                for(let i=0; i<16; i+=2) wcKnockoutMatches.push({ t1: winners[i], t2: winners[i+1], s1: null, s2: null, played: false });
+            } else if (wcKnockoutRound === 'r16') {
+                wcKnockoutRound = 'qf'; wcKnockoutMatches = [];
+                for(let i=0; i<8; i+=2) wcKnockoutMatches.push({ t1: winners[i], t2: winners[i+1], s1: null, s2: null, played: false });
+            } else if (wcKnockoutRound === 'qf') {
+                wcKnockoutRound = 'sf'; wcKnockoutMatches = [];
+                for(let i=0; i<4; i+=2) wcKnockoutMatches.push({ t1: winners[i], t2: winners[i+1], s1: null, s2: null, played: false });
+            } else if (wcKnockoutRound === 'sf') {
+                let losers = wcKnockoutMatches.map(m => {
+                    if (m.s1 > m.s2) return m.t2; if (m.s2 > m.s1) return m.t1; return m.p1 > m.p2 ? m.t2 : m.t1;
+                });
+                wcKnockoutRound = 'third';
+                wcKnockoutMatches = [
+                    { t1: losers[0], t2: losers[1], s1: null, s2: null, played: false, isThird: true },
+                    { t1: winners[0], t2: winners[1], s1: null, s2: null, played: false, isFinal: true }
+                ];
+            } else if (wcKnockoutRound === 'third') {
+                wcKnockoutRound = 'ended';
+            }
+
+            updateWCHubStageUI();
+            switchWCTab('bracket');
+        }
+
+        function renderWCBracket() {
+            const container = $('wc-bracket-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!wcKnockoutRound) {
+                container.innerHTML = `<div class="text-slate-400 text-sm italic py-10 w-full text-center">Knockout bracket will unlock after completion of the group stages!</div>`;
+                return;
+            }
+
+            let listHtml = wcKnockoutMatches.map(m => {
+                let pTag = (m.p1 !== null && m.p1 !== undefined) ? `<span class="text-yellow-400 text-[10px] ml-1">(${m.p1}-${m.p2} p)</span>` : '';
+                let scoreLabel = m.played ? `${m.s1} - ${m.s2} ${pTag}` : "VS";
+                let isFinal = m.isFinal ? "border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]" : "border-slate-800";
+                return `
+                    <div class="bg-slate-900 border ${isFinal} p-3 rounded-lg w-52 text-xs flex flex-col gap-1">
+                        ${m.isFinal ? '<span class="text-[9px] text-yellow-400 font-bold uppercase text-center w-full mb-1">Grand Final</span>' : ''}
+                        ${m.isThird ? '<span class="text-[9px] text-slate-400 font-bold uppercase text-center w-full mb-1">3rd Place Match</span>' : ''}
+                        <div class="flex justify-between font-bold"><span>${m.t1}</span><span>${m.played ? m.s1 : ''}</span></div>
+                        <div class="flex justify-between font-bold"><span>${m.t2}</span><span>${m.played ? m.s2 : ''}</span></div>
+                        <div class="text-center text-[10px] text-yellow-400 font-semibold border-t border-slate-800/40 pt-1 mt-1">${scoreLabel}</div>
+                    </div>
+                `;
+            }).join("");
+
+            container.innerHTML = `
+                <div class="flex flex-col gap-4">
+                    <span class="text-xs text-yellow-400 font-black uppercase">${wcKnockoutRound === 'third' ? 'Finals' : wcKnockoutRound.toUpperCase()} MATCHES</span>
+                    <div class="flex gap-4 flex-wrap max-w-4xl">${listHtml}</div>
+                </div>
+            `;
+        }
+
+        // --- DRAW FLAG JERSEY LOGIC ---
+        function drawProceduralBadge(ctx, x, y, r, team) {
+            ctx.save();
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = team.primary || "#333";
+            
+            ctx.fillStyle = team.primary || "#333";
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+            
+            if (team.secondary) {
+                ctx.strokeStyle = team.secondary;
+                ctx.lineWidth = 6;
+                ctx.shadowBlur = 0;
+                if (team.stripes === "V") {
+                    ctx.beginPath();
+                    ctx.moveTo(x - r/2, y - r); ctx.lineTo(x - r/2, y + r);
+                    ctx.moveTo(x + r/2, y - r); ctx.lineTo(x + r/2, y + r);
+                    ctx.stroke();
+                } else if (team.stripes === "H") {
+                    ctx.beginPath();
+                    ctx.moveTo(x - r, y - r/2); ctx.lineTo(x + r, y - r/2);
+                    ctx.moveTo(x - r, y + r/2); ctx.lineTo(x + r, y + r/2);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            if (team.badge) {
+                ctx.fillStyle = team.badge;
+                ctx.beginPath();
+                ctx.arc(x, y, r * 0.45, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = team.secondary || "#fff";
+                ctx.beginPath();
+                ctx.arc(x, y, r * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = team.secondary || "#fff";
+                ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(team.abbrev, x, y);
+            }
+
+            ctx.restore();
+        }
+
+        // --- APP INITIALIZATION ---
+        function initApp() {
+            canvas = document.getElementById('gameCanvas');
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
+
+            populateSelectors();
+
+            window.addEventListener('keydown', e => keysPressed[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', e => keysPressed[e.key.toLowerCase()] = false);
+            
+            window.addEventListener('resize', () => {
+                if (canvas) {
+                    canvas.style.width = '100%';
+                    canvas.style.height = 'auto';
+                }
+            });
+
+            const cb = $('crowd-bars');
+            if (cb) {
+                cb.innerHTML = '';
+                for(let i=0; i<15; i++) {
+                    cb.innerHTML += `<div class="w-1.5 rounded-t bg-cyan-400 transition-all duration-100" id="cb-${i}"></div>`;
+                }
+            }
         }
 
         // --- GAMEPLAY LOGIC ---
@@ -711,18 +1225,31 @@
             score1 = 0; score2 = 0; matchMinutes = 0;
             updateScoreUI();
             
-            $('sb-t1-abv').innerText = team1.abbrev;
-            $('sb-t1-color').style.backgroundColor = team1.primary;
-            $('sb-t2-abv').innerText = team2.abbrev;
-            $('sb-t2-color').style.backgroundColor = team2.primary;
+            const sbT1 = $('sb-t1-abv');
+            const sbT1c = $('sb-t1-color');
+            const sbT2 = $('sb-t2-abv');
+            const sbT2c = $('sb-t2-color');
+            if (sbT1) sbT1.innerText = team1.abbrev;
+            if (sbT1c) sbT1c.style.backgroundColor = team1.primary;
+            if (sbT2) sbT2.innerText = team2.abbrev;
+            if (sbT2c) sbT2c.style.backgroundColor = team2.primary;
             
-            if(gameMode === 'local') {
-                $('p2-controls-hint').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span><span><strong>PLAYER 2 (Right)</strong>: Use <kbd class="bg-slate-800 text-white px-1.5 py-0.5 rounded">▲ ▼ ◀ ▶</kbd> • Dash with <kbd class="bg-slate-800 text-white px-1.5 py-0.5 rounded ml-1">SHIFT</kbd></span>`;
-            } else if (gameMode === 'single') {
-                $('p2-controls-hint').innerHTML = `<span class="text-slate-500">Opponent Bot: **CPU ${difficulty.toUpperCase()} AI** active</span>`;
-            } else {
-                $('p2-controls-hint').innerHTML = `<span class="text-emerald-400">Online peer connection synchronized</span>`;
+            const hint = $('p2-controls-hint');
+            if (hint) {
+                if(gameMode === 'local') {
+                    hint.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span><span><strong>PLAYER 2 (Right)</strong>: Use <kbd class="bg-slate-800 text-white px-1.5 py-0.5 rounded">▲ ▼ ◀ ▶</kbd> • Dash with <kbd class="bg-slate-800 text-white px-1.5 py-0.5 rounded ml-1">SHIFT</kbd></span>`;
+                } else if (gameMode === 'single') {
+                    hint.innerHTML = `<span class="text-slate-500">Opponent Bot: **CPU ${difficulty.toUpperCase()} AI** active</span>`;
+                }
             }
+
+            const isWc = submode === 'worldcup';
+            const rematchBtn = $('btn-rematch-normal');
+            const advanceBtn = $('btn-advance-wc');
+            const menuBtn = $('btn-back-menu-game');
+            if (rematchBtn) rematchBtn.classList.toggle('hidden', isWc);
+            if (advanceBtn) advanceBtn.classList.toggle('hidden', !isWc);
+            if (menuBtn) menuBtn.classList.toggle('hidden', isWc); // hide normal menu button if in wc
 
             initPitch();
             startLoop();
@@ -739,32 +1266,37 @@
 
             countdown = 3;
             changeGameState('warmup');
-            $('overlay-goal').classList.add('hidden');
-            $('overlay-ended').classList.add('hidden');
+            const overlayG = $('overlay-goal');
+            const overlayE = $('overlay-ended');
+            if (overlayG) overlayG.classList.add('hidden');
+            if (overlayE) overlayE.classList.add('hidden');
             cornerStallTimer = 0;
         }
 
         function changeGameState(st) {
             gameState = st;
             if (st === 'warmup') {
-                $('overlay-warmup').classList.remove('hidden');
-                $('countdown-val').innerText = countdown;
+                const warmupEl = $('overlay-warmup');
+                const cdVal = $('countdown-val');
+                if (warmupEl) warmupEl.classList.remove('hidden');
+                if (cdVal) cdVal.innerText = countdown;
                 clearInterval(countdownInterval);
                 countdownInterval = setInterval(() => {
                     countdown--;
                     if(countdown <= 0) {
                         clearInterval(countdownInterval);
-                        $('overlay-warmup').classList.add('hidden');
+                        if (warmupEl) warmupEl.classList.add('hidden');
                         changeGameState('playing');
                     } else {
-                        $('countdown-val').innerText = countdown;
+                        if (cdVal) cdVal.innerText = countdown;
                     }
                 }, 1000);
             } else if (st === 'playing') {
                 clearInterval(matchTimerInterval);
                 matchTimerInterval = setInterval(() => {
                     matchMinutes++;
-                    $('match-timer-val').innerText = matchMinutes;
+                    const timerVal = $('match-timer-val');
+                    if (timerVal) timerVal.innerText = matchMinutes;
                     if(matchMinutes >= matchDuration) {
                         changeGameState('ended');
                     }
@@ -775,30 +1307,42 @@
                     let vibe = Math.floor(Math.random() * 45) + 30;
                     for(let i=0; i<15; i++) {
                         let h = Math.max(4, Math.min(24, vibe * (0.4 + Math.sin(i))));
-                        $(`cb-${i}`).style.height = `${h}px`;
+                        const bar = $(`cb-${i}`);
+                        if (bar) bar.style.height = `${h}px`;
                     }
                 }, 120);
             } else if (st === 'goal') {
                 clearInterval(matchTimerInterval);
                 clearInterval(crowdInterval);
-                $('overlay-goal').classList.remove('hidden');
+                const goalOverlay = $('overlay-goal');
+                if (goalOverlay) goalOverlay.classList.remove('hidden');
             } else if (st === 'ended') {
                 clearInterval(matchTimerInterval);
                 clearInterval(crowdInterval);
-                $('overlay-ended').classList.remove('hidden');
+                const endedOverlay = $('overlay-ended');
+                if (endedOverlay) endedOverlay.classList.remove('hidden');
                 
                 let winHtml = '';
                 if(score1 === score2) {
-                    winHtml = `<h4 class="text-2xl font-black text-white uppercase">HONORS EVEN!</h4><p class="text-xs text-slate-400 mt-1">A strategic stalemate draw.</p>`;
+                    if (submode === 'worldcup' && !!wcKnockoutRound) {
+                        winHtml = `<h4 class="text-2xl font-black text-white uppercase">PENALTY SHOOTOUT IMMINENT</h4><p class="text-xs text-yellow-400 mt-1">Match ended in a draw. Proceed to view penalty results.</p>`;
+                    } else {
+                        winHtml = `<h4 class="text-2xl font-black text-white uppercase">HONORS EVEN!</h4><p class="text-xs text-slate-400 mt-1">A strategic stalemate draw.</p>`;
+                    }
                 } else {
                     let wName = score1 > score2 ? team1.name : team2.name;
                     winHtml = `<span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest block mb-1">CHAMPION</span><h4 class="text-2xl font-black text-white uppercase">${wName}</h4><p class="text-xs text-emerald-400 mt-1">Stellar victory performance.</p>`;
                 }
-                $('winner-block').innerHTML = winHtml;
-                $('end-t1-abv').innerText = team1.abbrev;
-                $('end-t2-abv').innerText = team2.abbrev;
-                $('end-score1').innerText = score1;
-                $('end-score2').innerText = score2;
+                const winBlock = $('winner-block');
+                if (winBlock) winBlock.innerHTML = winHtml;
+                const endT1 = $('end-t1-abv');
+                const endT2 = $('end-t2-abv');
+                const endS1 = $('end-score1');
+                const endS2 = $('end-score2');
+                if (endT1) endT1.innerText = team1.abbrev;
+                if (endT2) endT2.innerText = team2.abbrev;
+                if (endS1) endS1.innerText = score1;
+                if (endS2) endS2.innerText = score2;
             }
         }
 
@@ -806,24 +1350,24 @@
             if (gameState !== 'playing') return;
             
             changeGameState('goal');
-            if(plyr === 1) { score1++; $('scorer-name').innerText = team1.name; }
-            else { score2++; $('scorer-name').innerText = team2.name; }
+            let scorerNameStr = (plyr === 1) ? team1.name : team2.name;
+            if(plyr === 1) { score1++; }
+            else { score2++; }
             
+            const scorerEl = $('scorer-name');
+            if (scorerEl) scorerEl.innerText = scorerNameStr;
             updateScoreUI();
-            
-            if(gameMode === 'online' && isHost && lobbyRef) {
-                lobbyRef.update({
-                    'player1State.score': score1, 'player2State.score': score2, 'status': 'goal'
-                });
-            }
 
             setTimeout(initPitch, 4000);
         }
 
         function updateScoreUI() {
-            $('score1-val').innerText = score1;
-            $('score2-val').innerText = score2;
-            $('match-timer-val').innerText = matchMinutes;
+            const s1v = $('score1-val');
+            const s2v = $('score2-val');
+            const timerV = $('match-timer-val');
+            if (s1v) s1v.innerText = score1;
+            if (s2v) s2v.innerText = score2;
+            if (timerV) timerV.innerText = matchMinutes;
         }
 
         // Main Loop
@@ -847,18 +1391,16 @@
             let gkTop = (court.height / 2) - (goalHeight / 2) + gk1.radius;
             let gkBottom = (court.height / 2) + (goalHeight / 2) - gk1.radius;
 
-            if (gameMode !== 'online' || isHost) {
-                gk1.y += gk1.vy;
-                if (gk1.y < gkTop || gk1.y > gkBottom) {
-                    gk1.vy *= -1;
-                    gk1.y = Math.max(gkTop, Math.min(gkBottom, gk1.y));
-                }
+            gk1.y += gk1.vy;
+            if (gk1.y < gkTop || gk1.y > gkBottom) {
+                gk1.vy *= -1;
+                gk1.y = Math.max(gkTop, Math.min(gkBottom, gk1.y));
+            }
 
-                gk2.y += gk2.vy;
-                if (gk2.y < gkTop || gk2.y > gkBottom) {
-                    gk2.vy *= -1;
-                    gk2.y = Math.max(gkTop, Math.min(gkBottom, gk2.y));
-                }
+            gk2.y += gk2.vy;
+            if (gk2.y < gkTop || gk2.y > gkBottom) {
+                gk2.vy *= -1;
+                gk2.y = Math.max(gkTop, Math.min(gkBottom, gk2.y));
             }
 
             // Player 1 Input
@@ -930,19 +1472,6 @@
                 
                 p2.x += p2.vx; p2.y += p2.vy;
             }
-            else if (gameMode === 'online' && !isHost) {
-                let dx2 = 0, dy2 = 0;
-                if (keysPressed['w'] || keysPressed['arrowup']) dy2 -= 1;
-                if (keysPressed['s'] || keysPressed['arrowdown']) dy2 += 1;
-                if (keysPressed['a'] || keysPressed['arrowleft']) dx2 -= 1;
-                if (keysPressed['d'] || keysPressed['arrowright']) dx2 += 1;
-                let l2 = Math.hypot(dx2, dy2);
-                if (l2 > 0) { p2.vx = (dx2/l2)*p2.speed; p2.vy = (dy2/l2)*p2.speed; }
-                else { p2.vx *= 0.8; p2.vy *= 0.8; }
-                p2.x += p2.vx; p2.y += p2.vy;
-                
-                if(lobbyRef) lobbyRef.update({ 'player2State.x': p2.x, 'player2State.y': p2.y, 'player2State.vx': p2.vx, 'player2State.vy': p2.vy });
-            }
 
             p2.x = Math.max(p2.radius + court.border, Math.min(court.width - p2.radius - court.border, p2.x));
             p2.y = Math.max(p2.radius + court.border, Math.min(court.height - p2.radius - court.border, p2.y));
@@ -986,8 +1515,11 @@
                     cornerStallTimer = 0;
                     
                     const w = $('anti-stall-warning');
-                    w.classList.remove('hidden');
-                    setTimeout(() => w.classList.add('hidden'), 2000);
+                    if (w) w.classList.remove('hidden');
+                    setTimeout(() => {
+                        const warnEl = $('anti-stall-warning');
+                        if (warnEl) warnEl.classList.add('hidden');
+                    }, 2000);
                 }
             } else {
                 cornerStallTimer = 0;
@@ -1006,16 +1538,6 @@
                 p1.x -= Math.cos(ang)*(over/2); p1.y -= Math.sin(ang)*(over/2);
                 p2.x += Math.cos(ang)*(over/2); p2.y += Math.sin(ang)*(over/2);
             }
-
-            // Online Sync
-            if (gameMode === 'online' && isHost && lobbyRef) {
-                lobbyRef.update({
-                    'player1State.x': p1.x, 'player1State.y': p1.y,
-                    'ballState.x': ball.x, 'ballState.y': ball.y, 'ballState.vx': ball.vx, 'ballState.vy': ball.vy,
-                    'gkState.y1': gk1.y, 'gkState.y2': gk2.y,
-                    'timeElapsed': matchMinutes, 'status': 'playing'
-                });
-            }
         }
 
         function checkPB(p) {
@@ -1033,6 +1555,7 @@
         }
 
         function draw() {
+            if (!ctx) return;
             ctx.clearRect(0, 0, court.width, court.height);
             
             // Field Lines
@@ -1072,18 +1595,33 @@
             ctx.fillRect(court.width - court.border, court.height/2 - goalHeight/2, goalWidth, goalHeight);
             ctx.strokeRect(court.width - court.border, court.height/2 - goalHeight/2, goalWidth, goalHeight);
 
-            // Draw Players
-            const dP = (p, team) => {
-                ctx.shadowBlur = p.isDashing ? 15 : 6; ctx.shadowColor = team.primary;
-                ctx.fillStyle = team.primary; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = team.secondary; ctx.lineWidth = 4; ctx.stroke();
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = team.secondary; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(team.abbrev, p.x, p.y);
-            };
-            dP(p1, team1); dP(p2, team2);
-            dP(gk1, { primary: "#1e293b", secondary: team1.primary, abbrev: "GK" });
-            dP(gk2, { primary: "#1e293b", secondary: team2.primary, abbrev: "GK" });
+            // Draw Players (if in WC mode, use flags!)
+            if (submode === 'worldcup') {
+                drawProceduralBadge(ctx, p1.x, p1.y, p1.radius, team1);
+                drawProceduralBadge(ctx, p2.x, p2.y, p2.radius, team2);
+            } else {
+                const dP = (p, team) => {
+                    ctx.shadowBlur = p.isDashing ? 15 : 6; ctx.shadowColor = team.primary;
+                    ctx.fillStyle = team.primary; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
+                    ctx.strokeStyle = team.secondary; ctx.lineWidth = 4; ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = team.secondary; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(team.abbrev, p.x, p.y);
+                };
+                dP(p1, team1); dP(p2, team2);
+            }
+
+            // Render Goalkeepers
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.arc(gk1.x, gk1.y, gk1.radius, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = team1.primary; ctx.lineWidth = 4; ctx.stroke();
+            ctx.fillStyle = "#ffffff"; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText("GK", gk1.x, gk1.y);
+
+            ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.arc(gk2.x, gk2.y, gk2.radius, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = team2.primary; ctx.lineWidth = 4; ctx.stroke();
+            ctx.fillStyle = "#ffffff"; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText("GK", gk2.x, gk2.y);
 
             // Draw Ball
             ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,255,255,0.6)';
